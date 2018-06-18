@@ -1,3 +1,0 @@
-flume-ng agent --conf ./conf/ -f conf/uberapp.properties -Dflume.root.logger=DEBUG,console -n flumeAgent
-
-hdfs dfs -put /home/1368B30/Uber/ /user/1368B30/Uber
