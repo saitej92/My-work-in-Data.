@@ -1,0 +1,45 @@
+##load the libraries 
+library(SparkR, lib.loc= "/usr/hdp/2.6.1.0-129/spark2/R/lib")
+###########################################################################
+sparkR.session(enableHiveSupport=TRUE)
+#################################
+
+##load the dara from hive to R
+sql("use insofe_custseg_saitejagv")
+
+train=sql("select * from customer_RFM")
+colnames(train) =c("customerID","recency","frequency","monetary")
+class(train)
+str(train)
+#sum(is.na(train))
+summary(train)
+####standardize the data 
+normalize =function(newdataf){
+normalizeddataf= newdataf
+for(n in names(newdataf)) {
+normalizeddataf[,n] =(newdataf[,n] -min(newdataf[,n]))/ (max(newdataf[,n])-min(newdataf[,n]))
+}
+return(normalizeddataf)
+}
+
+train1= train[, -c(1)]
+train1= as.data.frame(train1)
+train1= train1[-c(3566),]
+train1=createDataFrame(train1)
+schema=structType(structField("recency","double"),structField("frequency","double"),structField("monetary","double"))
+normalized_data= dapply(train1, func=normalize, schema =schema)
+train2=as.data.frame(train[,c(1)])
+kmeansDF = merge(train2,normalized_data)
+
+str(kmeansDF)
+kmeansModel=spark.kmeans(kmeansDF,customerID~ ., k=5)
+#Model summary
+summary(kmeansModel)
+###get fitted result from the K means model 
+fitted =predict (kmeansModel, KmeansDF)
+class(fitted)
+write.df(fitted, /user/1368B30/customersegappnew/fitted1.parquet")
+##copy it back to the hive table 
+sparkR.session.stop()
+
+

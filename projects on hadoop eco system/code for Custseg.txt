@@ -1,0 +1,59 @@
+CREATE TABLE IF NOT EXISTS Customers (
+Business_Area VARCHAR(16) NULL,
+Country_Desc VARCHAR(14) NULL,
+Company_Name VARCHAR(15) NULL,
+Cust_ID VARCHAR(10)  NULL,
+Material_ID  VARCHAR(10) NULL,
+
+
+
+sqoop job \
+--create initialimportsai \
+-- import-all-tables \
+--connect jdbc:mysql://172.16.0.249/insofe_cust_segmentation_Insaify \
+--username insofeadmin \
+--password Insofe_passw0rd \
+--warehouse-dir '/customers2' \
+-m 1
+sqoop job --exec initialimportsai
+
+
+
+CREATE EXTERNAL TABLE customers(
+business_area varchar(30),  
+country_desc varchar(50),   
+company_name varchar(50),
+customer_id int,      
+material_id int,
+month int,
+year int,
+quantity int,
+revenue decimal(20,2)
+)    
+COMMENT 'Data about all  customers derived from customers database'
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+STORED AS TEXTFILE
+location 'user/1368B30/CustomersegApp/customers/customers/';
+
+
+CREATE TABLE IF NOT EXISTS customers_sai(
+business_area VARCHAR(30),
+country_desc VARCHAR(30),
+company_name VARCHAR(30),
+customer_id BIGINT,
+material_id BIGINT,
+month BIGINT,
+year BIGINT,
+quantity BIGINT,
+revenue DECIMAL(10,2)
+)
+COMMENT 'Data about all  customers derived from customers database'
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+STORED AS TEXTFILE
+location 'user/1368B30/CustomersegApp/customers/customers/';
+	
+
++---------------+-------------+------+-----+---------+-----
+   
