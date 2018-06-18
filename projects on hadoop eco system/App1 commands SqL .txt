@@ -1,0 +1,157 @@
+ CREATE TABLE employees (
+ emp_no INT NOT NULL,
+ birth_date DATE NOT NULL,
+ first_name VARCHAR(14) NOT NULL,
+ last_name VARCHAR(16) NOT NULL,
+ gender ENUM ('M','F') NOT NULL,
+ hire_date DATE NOT NULL,
+ last_modified TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+ PRIMARY KEY(emp_no)
+ );
+    
+CREATE TABLE departments ( 
+dept_no CHAR(4) NOT NULL ,
+dept_name VARCHAR(40) NOT NULL , 
+last_modified TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+PRIMARY KEY (dept_no),
+UNIQUE KEY(dept_name)
+) ;   
+create table dept_manager (
+seq_no INT NOT NULL AUTO_INCREMENT,
+dept_no CHAR(4) NOT NULL,
+emp_no INT NOT NULL,
+from_date DATE NOT NULL,
+to_date DATE NOT NULL,
+last_modified TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+KEY(emp_no),
+KEY(dept_no),
+UNIQUE KEY(seq_no),
+FOREIGN KEY(emp_no) REFERENCES employees(emp_no) ON DELETE CASCADE,
+FOREIGN KEY(dept_no) REFERENCES departments (dept_no) ON DELETE CASCADE, 
+PRIMARY KEY(emp_no,dept_no)
+);  
+
+CREATE TABLE dept_emp( 
+seq_no INT NOT NULL AUTO_INCREMENT, 
+emp_no INT NOT NULL ,
+dept_no CHAR(4) NOT NULL ,
+from_date DATE NOT NULL ,
+to_date DATE NOT NULL ,
+last_modified TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+KEY (emp_no),
+KEY (dept_no),
+UNIQUE KEY (seq_no),
+FOREIGN KEY (emp_no) REFERENCES employees(emp_no) ON DELETE CASCADE,
+FOREIGN KEY (dept_no) REFERENCES departments(dept_no) ON DELETE CASCADE,
+PRIMARY KEY (emp_no,dept_no)
+);
+
+create table titles(
+seq_no INT NOT NULL AUTO_INCREMENT,
+emp_no INT NOT NULL,
+title VARCHAR(50) NOT NULL,
+from_date DATE NOT NULL,
+to_date DATE,
+last_modified TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+KEY (emp_no),
+UNIQUE KEY(seq_no),
+FOREIGN KEY(emp_no) REFERENCES employees (emp_no) ON DELETE CASCADE,
+PRIMARY KEY(emp_no,title,from_date)
+);
+
+Create Table salaries (
+seq_no INT NOT NULL AUTO_INCREMENT,
+emp_no INT NOT NULL,
+salary INT NOT NULL,
+from_date DATE NOT NULL,
+to_date DATE NOT NULL,
+last_modified TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+KEY (emp_no),
+UNIQUE KEY (seq_no),
+FOREIGN KEY (emp_no) REFERENCES employees (emp_no) ON DELETE CASCADE,
+PRIMARY KEY (emp_no, from_date)
+);
+
+SELECT 'Loading departments' as 'INFO';
+source /home/1368B30/App1/MySQL/load_departments.dump;
+SELECT 'Loading employees' as 'INFO';
+source /home/1368B30/App1/MySQL/load_employees.dump;
+SELECT 'Loading dept_emp' as 'INFO';
+source /home/1368B30/App1/MySQL/load_dept_emp.dump;
+SELECT 'Loading dept_manager' as 'INFO';
+source /home/1368B30/App1/MySQL/load_dept_manager.dump;
+SELECT 'Loading titles' as 'INFO';
+source /home/1368B30/App1/MySQL/load_titles.dump;
+SELECT 'salaries' as 'INFO';
+source /home/1368B30/App1/MySQL/load_salaries.dump;
+
+select 'Loading departments' as 'INFO';
+source /home/1368B30/App1/MySQL/new_inserts/load_departments_added.dump;
+select 'Loading employees' as 'INFO';
+source /home/1368B30/App1/MySQL/new_inserts/load_employees_added.dump;
+select 'Loading dept_emp' as 'INFO';
+source /home/1368B30/App1/MySQL/new_inserts/load_dept_emp_added.dump;
+select 'Loading dept_manager' as 'INFO';
+source /home/1368B30/App1/MySQL/new_inserts/load_dept_manager_added.dump;
+select 'Loading titles' as 'INFO';
+source /home/1368B30/App1/MySQL/new_inserts/load_titles_added.dump;
+select 'Loading salaries' as 'INFO';
+source /home/1368B30/App1/MySQL/new_inserts/load_salaries_added.dump;
+
+sqoop job \
+--create initialimport \
+-- import-all-tables \
+--connect jdbc:mysql://172.16.0.249/insofe_employeesDB_saitejgv \
+--username insofeadmin \
+--password Insofe_passw0rd \
+--warehouse-dir 'user/1368B30/datasets/employeesdb_saitgv/' \
+-m 1
+
+sqoop job --exec initialimport
+
+sqoop job \
+--create inc_imp_emp \
+-- import \
+--connect jdbc:mysql://172.16.0.249/insofe_employeesDB_saitejgv \
+--username insofeadmin \
+--password Insofe_passw0rd \
+--table employees \
+--incremental append \
+--check-column emp_no \
+--last-value 300024 \
+--target-dir 'user/1368B30/datasets/employeesdb_saitgv/employees/' \
+-m 1
+
+sqoop job --exec inc_imp_emp
+
+
+sqoop job --create inc_imp_dept -- import --connect jdbc:mysql://172.16.0.249/insofe_employeesDB_saitejgv --username insofeadmin --password Insofe_passw0rd --table departments --incremental lastmodified --check-column last_modified --last-value "2013-01-28 23:59:59" --target-dir '/user/1368B30/datasets/employeesdb_saitejgv/departments/' -m 1 --merge-key dept_no
+sqoop job --exec inc_imp_dept
+
+
+sqoop job \
+--create inc_imp_department1 \
+-- import \
+--connect jdbc:mysql://172.16.0.249/insofe_employeesDB_praveen \
+--username insofeadmin \
+--password Insofe_passw0rd \
+--table departments \
+--incremental lastmodified \
+--check-column last_modified \
+--last-value "2013-01-28 23:59:59" \
+--target-dir 'user/1361B30/datasets/employeesdb/departments/' \
+-m 1 \
+--merge-key dept_no
+
+sqoop job \
+--create inc_imp_ \
+-- import \
+--connect jdbc:mysql://172.16.0.249/insofe_employeesDB_saitejgv \
+--username insofeadmin \
+--password Insofe_passw0rd \
+--table employees \
+--incremental append \
+--check-column emp_no \
+--last-value 300024 \
+--target-dir 'user/1368B30/datasets/employeesdb_saitgv/employees/' \
+-m 1
