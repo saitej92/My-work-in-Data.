@@ -1,0 +1,301 @@
+---
+title: "Internship Women data"
+author: "Sai teja Gollapinni"
+date: "October 27, 2017"
+output: html_document
+---
+###clearing the environment 
+```{r}
+rm(list =ls(all=T))
+```
+
+##set the path for the data
+```{r}
+setwd("C:/Users/saite/Documents/Tennis data Internship/raw data")
+getwd()
+
+```
+#####load the data  
+```{r}
+Ausopen_women=read.csv(file = "AusOpen-women-2013.csv",header = T, sep = ",")
+#no of NA's,summary and structure of data-W 
+sum(is.na(Ausopen_women))
+str(Ausopen_women)
+summary(Ausopen_women)
+#2.French open Men and women 
+Fraopen_women=read.csv(file = "FrenchOpen-women-2013.csv",header = T,sep = ",")
+#no of NA's,summary and structure of data-W 
+sum(is.na(Fraopen_women))
+str(Fraopen_women)
+summary(Fraopen_women)
+#3.Wimbledon Men and women
+Wim_women=read.csv(file = "Wimbledon-women-2013.csv", header = T, sep = ",")
+#no of NA's,summary and structure of data-W 
+sum(is.na(Wim_women))
+str(Wim_women)
+summary(Wim_women)
+#4. US open men and women
+Usopen_women=read.csv(file="USOpen-women-2013.csv", header = T, sep = ",")
+#no of NA's,summary and structure of data-W 
+sum(is.na(Usopen_women))
+str(Usopen_women)
+summary(Usopen_women)
+```
+##convering round and result into categorical
+```{r}
+Ausopen_women$Result=as.factor(as.character(Ausopen_women$Result))
+str(Ausopen_women)
+
+Fraopen_women$Result=as.factor(as.character(Fraopen_women$Result))
+str(Fraopen_women)
+
+Wim_women$Result=as.factor(as.character(Wim_women$Result))
+str(Wim_women)
+
+Usopen_women$Result=as.factor(as.character(Usopen_women$Result))
+str(Usopen_women)
+
+```
+#converting 4 sets into a single data set for prediction(Women)
+```{r}
+names(Ausopen_women)
+names(Fraopen_women)
+names(Wim_women)
+names(Usopen_women)
+colnames(Ausopen_women)[5]=colnames(Fraopen_women)[5]
+colnames(Ausopen_women)[6]=colnames(Fraopen_women)[6]
+colnames(Wim_women)[38]=colnames(Fraopen_women)[38]
+colnames(Usopen_women)[38]=colnames(Wim_women)[38]
+colnames(Usopen_women)[1]=colnames(Wim_women)[1]
+colnames(Usopen_women)[2]=colnames(Wim_women)[2]
+colnames(Usopen_women)[3]=colnames(Wim_women)[3]
+combineddata1_w =rbind(Ausopen_women,Fraopen_women)
+combineddata2_w=rbind(Wim_women,Usopen_women)
+combineddata_w=rbind(combineddata1_w,combineddata2_w)
+str(combineddata_w)
+```
+#convering dual to singular data 
+```{r}
+combineddata_w$FSP = (combineddata_w$FSP.1 - combineddata_w$FSP.2)
+combineddata_w$FSW = (combineddata_w$FSW.1 - combineddata_w$FSW.2)
+combineddata_w$SSP = (combineddata_w$SSP.1 - combineddata_w$SSP.2)
+combineddata_w$SSW = (combineddata_w$SSW.1 - combineddata_w$SSW.2)
+combineddata_w$ACE = (combineddata_w$ACE.1 - combineddata_w$ACE.2)
+combineddata_w$DBF = (combineddata_w$DBF.1 - combineddata_w$DBF.2)
+combineddata_w$WNR = (combineddata_w$WNR.1 - combineddata_w$WNR.2)
+combineddata_w$UFE = (combineddata_w$UFE.1 - combineddata_w$UFE.2)
+combineddata_w$BPC = (combineddata_w$BPC.1 - combineddata_w$BPC.2)
+combineddata_w$BPW = (combineddata_w$BPW.1 - combineddata_w$BPW.2)
+combineddata_w$NPA = (combineddata_w$NPA.1 - combineddata_w$NPA.2)
+combineddata_w$NPW = (combineddata_w$NPW.1 - combineddata_w$NPW.2)
+combineddata_w$TPW = (combineddata_w$TPW.1 - combineddata_w$TPW.2)
+head(combineddata_w)
+
+combineddata_w=combineddata_w[,!(colnames(combineddata_w))%in%(c('Player1','Player2','FNL.1','FNL.2', 'FSP.1','FSW.1','SSP.1','SSW.1','ACE.1','DBF.1','WNR.1','UFE.1','BPC.1','BPW.1','NPA.1','NPW.1','TPW.1',
+'ST1.1','ST2.1','ST3.1','ST4.1','ST5.1','ST1.2','ST2.2','ST3.2','ST4.2','ST5.2','FSP.2','FSW.2','SSP.2',
+'SSW.2','ACE.2','DBF.2','WNR.2','UFE.2','BPC.2','BPW.2','NPA.2','NPW.2','TPW.2'))]
+str(combineddata_w)
+```
+##Imputation 
+```{r}
+combinedw_zimp=combineddata_w
+combinedw_zimp[is.na(combinedw_zimp)]=0
+sum(is.na(combinedw_zimp))
+##central Imputation
+library(DMwR)
+combinedw_cimp=centralImputation(data = combineddata_w)
+sum(is.na(combinedw_cimp))
+#Knn imp
+complete.cases(combineddata_w)
+combinedw_Kimp=knnImputation(data = combineddata_w, k=3)
+sum(is.na(combinedw_Kimp))
+```
+#correlation between singular variables
+```{r}
+library(corrplot)
+str(combinedw_Kimp)
+Combinedw_corr=cor(combinedw_Kimp[,-c(2)])
+corrplot(Combinedw_corr, method = 'number')
+combinedw_num=combinedw_Kimp[,-c(2)]
+combinedw_cat = data.frame(combinedw_Kimp[,c("Result")])
+colnames(combinedw_cat)="Result"
+colnames(combinedw_cat)
+class(combinedw_cat)
+str(combinedw_cat)
+```
+#standardize
+```{r}
+library(vegan)
+#combinedw_range=decostand(combinedw_num,"range")# run when only needed 
+combinedw_stand=decostand(combinedw_num,"standardize")# zscore method
+Combinedw_final=cbind(combinedw_cat,combinedw_stand)
+#correlation 
+library(corrplot)
+combinedw_fcorr=cor(combinedw_num)
+corrplot(combinedw_fcorr,method = 'number')
+```
+#splitting the data
+#seeding the environment 
+```{r}
+set.seed(786)
+library(caret)
+combinedwtrain_row=createDataPartition(Combinedw_final$Result, p=0.7,list=F)
+combinedwtrain_data=Combinedw_final[combinedwtrain_row,]
+combinedwtest_data=Combinedw_final[-combinedwtrain_row,]
+str(combinedwtrain_data)
+str(combinedwtest_data)
+```
+##Build the model-Logistic regression
+```{r}
+combinedw_logreg= glm(Result~FSW+ACE+UFE+DBF,data = combinedwtrain_data, family = binomial)
+summary(combinedw_logreg)
+##stepAIC
+library(MASS)
+combinedw_Lregstep=stepAIC(combinedw_logreg)
+summary(combinedw_Lregstep)
+##Vif
+library(car)
+combinedw_vif= vif(combinedw_Lregstep)
+summary(combinedw_vif)
+combinedw_logreg= glm(Result~FSW+ACE+UFE,data = combinedwtrain_data, family =binomial)
+prob_train_combw <- predict(combinedw_Lregstep, type = "response")
+library(ROCR)
+predtrain_combw <- prediction(prob_train_combw, combinedwtrain_data$Result)
+preds_train_combw <- ifelse(prob_train_combw > 0.65, "1", "0")
+library(caret)
+confusionMatrix(preds_train_combw,combinedwtrain_data$Result, positive = "1")
+
+perf_combw<- performance(pred_combw, measure="tpr", x.measure="fpr")
+plot(perf_combw, col=rainbow(10), colorize=T, print.cutoffs.at=seq(0,1,0.05))
+
+perf_auc_combw <- performance(pred_combw, measure="auc")
+# Access the auc score from the performance object
+auc_combw <- perf_auc_combw@y.values[[1]]
+
+print(auc_combw)
+
+
+prob_test_combw <- predict(combinedw_logreg,combinedwtest_data, type = "response")
+
+preds_test_combw <- ifelse(prob_test_combw > 0.65, "1", "0")
+
+table(preds_test_combw)
+
+test_data_labs_combw <- combinedwtest_data$Result
+
+conf_matrix_combw <- table(test_data_labs_combw, preds_test_combw)
+
+print(conf_matrix_combw)
+
+accuracy_combw <- sum(diag(conf_matrix_combw))/sum(conf_matrix_combw)
+
+print(accuracy_combw)
+
+library(caret)
+# Using the argument "Positive", we can get the evaluation metrics according to our positive referene level
+confusionMatrix(preds_test_combw, combinedwtest_data$Result, positive = "1")
+```
+#K fold cross validation
+```{r}
+library(caret)
+set.seed(123)
+#define train control
+train_control_combw <- trainControl(method="cv", number=5)
+# fix the parameters of the algorithm
+#grid <- expand.grid(.fL=c(0), .usekernel=c(FALSE))
+Knncv_model_combw<- train(Result~., data=combinedwtrain_data,trControl=train_control_combw,method="glm",preProcess = c("center","scale"))
+summary(Knncv_model_combw)
+#plot(Knncv_model)
+predtrain_cv_combw=predict(Knncv_model_combw,combinedwtrain_data)
+Tabletrain_cv_combw=table(predtrain_cv_combw,combinedwtrain_data$Result)
+print(Tabletrain_cv_combw)
+accuracytrain_combw <- sum(diag(Tabletrain_cv_combw))/sum(Tabletrain_cv_combw)
+print(accuracytrain_combw)
+pred_cv_combw=predict(Knncv_model_combw,combinedwtest_data)
+class(pred_cv_combw)
+Table_cv_combw=table(pred_cv_combw,combinedwtest_data$Result)
+print(Table_cv_combw)
+accuracy_combw <- sum(diag(Table_cv_combw))/sum(Table_cv_combw)
+print(accuracy_combw)
+confusionMatrix(pred_cv_combw, combinedwtest_data$Result, positive = "1")
+```
+
+
+#####Decision Trees 
+```{r}
+
+library(C50)
+c5_tree <- C5.0(Result ~ . ,combinedwtrain_data)
+
+# Use the rules = T argument if you want to extract rules later from the model
+
+c5_rules <- C5.0(Result~ . ,combinedwtrain_data, rules = T)
+```
+
+### Variable Importance in trees
+```{r}
+C5imp(c5_tree, metric = "usage")
+```
+### Rules from trees
+```{r}
+summary(c5_rules)
+```
+###plot 
+```{r}
+plot(c5_tree)
+```
+### Predictions on the test data
+```{r}
+preds_trainDT<-predict(c5_tree,combinedwtrain_data)
+confusionMatrix(preds_trainDT, combinedwtrain_data$Result)
+preds <- predict(c5_tree, combinedwtest_data)
+####confusionMatrix()
+library(caret)
+confusionMatrix(preds, combinedwtest_data$Result)
+```
+
+####SVM
+###mis classification
+```{r}
+library(e1071)
+tunedsvmmodel<- tune.svm(Result ~., data = combinedwtrain_data, kernel='linear',gamma=10^(-6 :-1),cost=10^(-1:1),probability=T)
+summary(tunedsvmmodel)
+tunedsvmmodel$best.parameters
+#rm(fitted_probW,fittedValues)
+fitted_probW = predict(tunedsvmmodel$best.model, combinedwtrain_data[-1], decision.values = TRUE, probability = TRUE)
+classNames=c('1','0')
+fittedValues=classNames[apply(attr(fitted_probW, "probabilities"),1,function(x) which(x==max(x)))]
+test_probW = predict(tunedsvmmodel$best.model, combinedwtest_data[-1], decision.values = TRUE, probability = TRUE)
+#head(attr(test_probW,"probabilities"))
+#levels(combinedwtrain_data$Result)
+predValues=factor(test_probW,levels=c("0","1"))
+levels(fittedValues)
+length(fittedValues)
+length(combinedwtest_data$Result)
+print('Confusion Matrix on Train Data.')
+confusionMatrix(combinedwtrain_data$Result,fittedValues)
+print('Confusion Matrix on Test Data.')
+confusionMatrix(combinedwtest_data$Result,predValues)
+par(mfrow=c(2,2))
+plot(fittedValues)
+plot(predValues)
+```
+
+####random forest
+```{r}
+library(randomForest)
+rf.W= randomForest(Result~ ., data=combinedwtrain_data,ntree=40)
+rf.pred1 <- predict(rf.W, combinedwtrain_data)
+rf.pred2 <- predict(rf.W, combinedwtest_data)
+library(caret)
+confusionMatrix(rf.pred1,combinedwtrain_data$Result,positive = "1")
+confusionMatrix(rf.pred2,combinedwtest_data$Result,positive ="1" )
+```
+##plot the RF tree 
+```{r}
+library(multcomp)
+library("party")
+x <- ctree(Result ~ ., data=combineddata_w)
+plot(x)
+varImpPlot(rf.W)
+```
