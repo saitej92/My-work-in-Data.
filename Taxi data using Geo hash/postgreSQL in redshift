@@ -1,0 +1,5 @@
+The use case is for a real time taxi data in a city and they want to maximize the no of responses to the requests the users make with less number
+of taxis in a single geo hash.
+The problem is to know the supply demand of the taxis in a geohash and also how it surges or otherwise in the same location.
+Also other problems include some suspicious rides and then people with no payments and getting discounts on the first rides along with different 
+payment types for all the rides in each location.
