@@ -1,0 +1,3 @@
+This folder is about Usage of the different Hadoop ecosystem applications correctly deployed for the problem scenarios.
+This mainly comprises of how to load data into HDFS using Map Reduce, Spark, sparkmlib, SparkR, Pyspark,Flume, sqoop, oozie, Zookeeper,Kafka etc.
+Some of those applications are clustering of uber taxi coordinates for a location, clustering of customers for better segmentation, twitter sentiment analysis and others etc. 
